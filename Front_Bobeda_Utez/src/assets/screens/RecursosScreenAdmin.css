@@ -1,0 +1,169 @@
+.imagenNav {
+    display: block;
+    margin: auto;
+}
+
+.navbar-nav {
+    width: 100%;
+}
+
+.navbar-nav .nav-item1 {
+    padding-left: 15px;
+}
+
+.navbar-nav .nav-link {
+    font-size: 20px;
+}
+
+.navbar-nav .dropdown-menu .dropdown-item {
+    font-size: 19px;
+}
+
+.search-container {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.search-container .form-control {
+    width: 250px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+}
+
+.search-container .btn {
+    border-radius: 20px;
+    margin-left: 10px;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Contenedor del título y del botón */
+.title-and-button-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px; /* Espacio entre este contenedor y la tabla */
+}
+
+/* Estilo para el título "Recursos" */
+.table-container-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+/* Botón "Añadir Nuevo Recurso" alineado a la derecha */
+.btn-success {
+    background-color: #157347;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.btn-success:hover {
+    background-color: #13653f;
+}
+
+/* Estilos de la tabla */
+.table-container {
+    flex-grow: 1;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Encabezado */
+.table thead {
+    background: #f8f9fa;
+    color: black;
+    font-weight: bold;
+}
+
+.table thead th {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+/* Cuerpo */
+.table tbody tr {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.table td {
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Botón Editar */
+.btn-warning {
+    background-color: #ffcc00;
+    border: none;
+    color: black;
+    font-weight: bold;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-warning:hover {
+    background-color: #e6b800;
+}
+
+/* Botón Eliminar */
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    font-weight: bold;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-container h2 {
+    margin: 0;
+}
+
+.btn1 {
+    white-space: nowrap;
+    width: 300px;
+}
+

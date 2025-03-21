@@ -1,0 +1,22 @@
+.imagenNav {
+    display: block;
+    margin: auto;
+  }
+  
+  .navbar-nav {
+    width: 100%;
+  }
+  
+  .navbar-nav .nav-item1 {
+    padding-left: 15px;
+  }
+.navbar-nav .nav-link {
+  font-size: 20px; 
+}
+.navbar-nav .dropdown-menu .dropdown-item {
+    font-size: 19px;
+  }
+  .card{
+    background-color: #039B4F;
+  }
+  

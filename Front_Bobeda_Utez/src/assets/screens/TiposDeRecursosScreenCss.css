@@ -1,0 +1,29 @@
+.btn-narrow {
+    padding: 3px 10px;
+    width: 150px;
+    font-size: 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-right: 10px;
+    border: none;
+}
+
+.btn-warning-narrow {
+    background-color: #ffcc00;
+    color: black;
+}
+
+.btn-warning-narrow:hover {
+    background-color: #e6b800;
+}
+
+.btn-danger-narrow {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger-narrow:hover {
+    background-color: #c82333;
+}

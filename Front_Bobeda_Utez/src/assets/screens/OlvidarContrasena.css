@@ -1,0 +1,64 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    flex-direction: row;
+    display: flex;
+}
+
+.parte-izquierda {
+    width: 50%;
+    height: 100vh;
+    display: flex;
+    justify-content: center; 
+}
+
+nav {
+    width: 100%;
+}
+
+
+.img-nav {
+    width: 100px;
+    height: 100px;
+}
+
+.izquierda-arriba {
+    margin-top: 90px;
+}
+.parte-derecha{
+    height: 100vh;
+}
+.img-derecha {
+    border-radius: 20px;
+    margin-left: 40px;
+}
+
+.izquierda-form {
+    text-align: center;
+    margin: 100px;
+}
+
+h1{
+    padding-top: 20px;
+    padding-bottom: 10px;
+    font-weight: bold;
+    text-align: start;
+}
+
+.texto{
+    padding-bottom: 30px;
+    text-align: justify;
+}
+
+.correo{
+    margin-bottom: 15px;
+}
+
+.boton{
+    background-color: rgb(92, 92, 238);
+    font-weight: bold;
+}

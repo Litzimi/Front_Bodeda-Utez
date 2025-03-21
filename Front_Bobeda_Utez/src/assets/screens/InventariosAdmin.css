@@ -1,0 +1,166 @@
+/* Estilos para la imagen del logo */
+.imagenNav {
+    display: block;
+    margin: auto;
+}
+
+/* Estilos para la barra de navegación */
+.navbar-nav {
+    width: 100%;
+}
+
+.navbar-nav .nav-item1 {
+    padding-left: 15px;
+}
+
+.navbar-nav .nav-link {
+    font-size: 20px;
+}
+
+.navbar-nav .dropdown-menu .dropdown-item {
+    font-size: 19px;
+}
+
+/* Estilos para el contenedor de búsqueda */
+.search-container {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.search-container .form-control {
+    width: 250px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+}
+
+.search-container .btn {
+    border-radius: 20px;
+    margin-left: 10px;
+}
+
+/* Estilos para el contenedor principal */
+.container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Contenedor del título y del botón */
+.title-and-button-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px; /* Espacio entre este contenedor y la tabla */
+}
+
+/* Estilo para el título "Recursos" */
+.table-container-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+/* Botón "Añadir Nuevo Recurso" alineado a la derecha */
+.btn-success {
+    background-color: #157347;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.btn-success:hover {
+    background-color: #13653f;
+}
+
+/* Estilos de la tabla */
+.table-container {
+    flex-grow: 1;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Encabezado de la tabla */
+.table thead {
+    background: #f8f9fa;
+    color: black;
+    font-weight: bold;
+}
+
+.table thead th {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+/* Cuerpo de la tabla */
+.table tbody tr {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.table td {
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Estilos personalizados para los botones */
+.btn-custom {
+    padding: 5px 15px; /* Ajusta el padding para que ambos botones tengan el mismo tamaño */
+    border-radius: 4px; /* Bordes redondeados */
+    font-size: 14px; /* Tamaño de fuente */
+    font-weight: bold; /* Texto en negrita */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+    white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+    margin-right: 10px; /* Espacio entre los botones */
+    border: none; /* Sin borde */
+}
+
+
+.btn-custom-ver:hover {
+    background-color: #ffff10; /* Color verde oscuro al pasar el mouse */
+}
+
+
+
+.btn-custom-descargar:hover {
+    background-color: #ff0606; /* Color azul oscuro al pasar el mouse */
+}
+
+/* Estilos para el contenedor del encabezado */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-container h2 {
+    margin: 0;
+}
+
+.btn1 {
+    white-space: nowrap;
+    width: 300px;
+}

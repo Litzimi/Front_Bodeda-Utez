@@ -1,0 +1,106 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  font-family: Arial, sans-serif;
+}
+
+input {
+  background-color: white;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background: white;
+}
+
+.izquierda {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+}
+
+.izquierda img {
+  width: 600px; /* Tamaño reducido para que la parte derecha tenga más espacio */
+}
+
+.derecha {
+  flex: 1.5; /* Aumentar el tamaño de la parte derecha */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  padding: 60px; /* Mayor espacio interior */
+  width: 100%; /* Permitir que la sección se expanda */
+  max-width: 700px; /* Asegura que tenga espacio suficiente */
+}
+
+form {
+  width: 100%; /* Eliminar max-width para que se expanda completamente */
+  text-align: center;
+}
+
+.logo {
+  width: 80px; /* Logo más grande */
+  margin-bottom: 20px;
+}
+
+p {
+  text-align: left;
+  margin: 10px 0;
+  font-size: 19px; /* Texto más grande */
+  color: #333;
+  font-family: Arial;
+}
+
+input {
+  width: 100%; 
+  min-width: 400px; /* Garantiza un ancho mínimo amplio */
+  padding: 15px; 
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  color: black;
+  font-size: 16px;
+}
+
+a {
+  color: #007bff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px; /* Botón más grande */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+h3 {
+  color: black;
+  font-size: 20px; /* Título más grande */
+}
