@@ -1,70 +1,73 @@
-import React, {  useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./RecursosScreenAdmin.css";
-import "./AdminPrincipal";
 
 function RecursosScreenAdmin() {
-  const [data, setData] = useState([
-    {
-      codigo: "ffff0_1",
-      nombre: "Silla",
-      descripcion: "Te puedes sentar",
-      marca: "Sony",
-      modelo: "Modelo",
-      numeroSerie: "Sony",
-      tipoRecurso: "Electrónico",
-      edificio: "D1",
-      espacio: "Taller pesado",
-    },
-    {
-      codigo: "ffff0_2",
-      nombre: "Escritorio",
-      descripcion: "Colocar tus cosas",
-      marca: "Sony",
-      modelo: "Modelo",
-      numeroSerie: "Sony",
-      tipoRecurso: "Mesa",
-      edificio: "D1",
-      espacio: "Academia de idiomas",
-    },
-  ]);
-
+  const [data, setData] = useState([]);
   const [selectedResource, setSelectedResource] = useState(null);
   const [newResource, setNewResource] = useState({
-    codigo: "",
-    nombre: "",
-    descripcion: "",
-    marca: "",
-    modelo: "",
-    numeroSerie: "",
-    tipoRecurso: "",
-    edificio: "",
-    espacio: "",
+    code: "",
+    name: "",
+    description: "",
+    brand: "",
+    model: "",
+    serialNumber: "",
+    typeOfResource: null,
+    building: null,
   });
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  useEffect(() => {
+    if (selectedResource) {
+      setTimeout(() => {
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+      }, 100);
+    }
+  }, [selectedResource]);
+
+  const fetchResources = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api-BobedaUTEZ/resource");
+      if (Array.isArray(response.data.data)) {
+        setData(response.data.data);
+      } else {
+        console.error("La respuesta no contiene un array:", response.data);
+        setData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+      setData([]);
+    }
+  };
 
   const handleEditClick = (resource) => {
     setSelectedResource({ ...resource });
   };
 
   const handleAddClick = () => {
+    setSelectedResource(null);
     setNewResource({
-      codigo: "",
-      nombre: "",
-      descripcion: "",
-      marca: "",
-      modelo: "",
-      numeroSerie: "",
-      tipoRecurso: "",
-      edificio: "",
-      espacio: "",
+      code: "",
+      name: "",
+      description: "",
+      brand: "",
+      model: "",
+      serialNumber: "",
+      typeOfResource: null,
+      building: null,
     });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (selectedResource) {
+    if (selectedResource !== null) {
       setSelectedResource((prev) => ({
         ...prev,
         [name]: value,
@@ -77,34 +80,44 @@ function RecursosScreenAdmin() {
     }
   };
 
-  const handleSaveChanges = () => {
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.codigo === selectedResource.codigo ? selectedResource : item
-      )
-    );
-    setSelectedResource(null);
+  const handleSaveChanges = async () => {
+    try {
+      await axios.put("http://localhost:8080/api-BobedaUTEZ/resource", selectedResource);
+      fetchResources();
+      setSelectedResource(null);
+    } catch (error) {
+      console.error("Error updating resource:", error);
+    }
   };
 
-  const handleAddResource = () => {
-    setData((prevData) => [...prevData, newResource]);
-    setNewResource({
-      codigo: "",
-      nombre: "",
-      descripcion: "",
-      marca: "",
-      modelo: "",
-      numeroSerie: "",
-      tipoRecurso: "",
-      edificio: "",
-      espacio: "",
-    });
+  const handleAddResource = async () => {
+    try {
+      await axios.post("http://localhost:8080/api-BobedaUTEZ/resource", newResource);
+      fetchResources();
+      setNewResource({
+        code: "",
+        name: "",
+        description: "",
+        brand: "",
+        model: "",
+        serialNumber: "",
+        typeOfResource: null,
+        building: null,
+      });
+    } catch (error) {
+      console.error("Error adding resource:", error);
+    }
   };
 
-  const handleDelete = (codigo) => {
+  const handleDelete = async (id) => {
     const confirmDelete = window.confirm("¿Está seguro de que desea eliminar este recurso?");
     if (confirmDelete) {
-      setData((prevData) => prevData.filter((item) => item.codigo !== codigo));
+      try {
+        await axios.delete(`http://localhost:8080/api-BobedaUTEZ/resource/${id}`);
+        fetchResources();
+      } catch (error) {
+        console.error("Error deleting resource:", error);
+      }
     }
   };
 
@@ -194,22 +207,20 @@ function RecursosScreenAdmin() {
               <th>No. de serie</th>
               <th>Tipo de recurso</th>
               <th>Edificio</th>
-              <th>Espacio</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((item, index) => (
+            {Array.isArray(data) && data.map((item, index) => (
               <tr key={index}>
-                <td>{item.codigo}</td>
-                <td>{item.nombre}</td>
-                <td>{item.descripcion}</td>
-                <td>{item.marca}</td>
-                <td>{item.modelo}</td>
-                <td>{item.numeroSerie}</td>
-                <td>{item.tipoRecurso}</td>
-                <td>{item.edificio}</td>
-                <td>{item.espacio}</td>
+                <td>{item.code}</td>
+                <td>{item.name}</td>
+                <td>{item.description}</td>
+                <td>{item.brand}</td>
+                <td>{item.model}</td>
+                <td>{item.serialNumber}</td>
+                <td>{item.typeOfResource?.name}</td>
+                <td>{item.building?.name}</td>
                 <td>
                   <button
                     className="btn btn-warning btn-sm me-2"
@@ -218,7 +229,7 @@ function RecursosScreenAdmin() {
                     onClick={() => handleEditClick(item)}>
                     Editar
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.codigo)}>Eliminar</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>Eliminar</button>
                 </td>
               </tr>
             ))}
@@ -240,8 +251,8 @@ function RecursosScreenAdmin() {
                       <input
                         type="text"
                         className="form-control"
-                        name="codigo"
-                        value={selectedResource.codigo}
+                        name="code"
+                        value={selectedResource.code}
                         onChange={handleChange}
                         disabled
                       />
@@ -251,8 +262,8 @@ function RecursosScreenAdmin() {
                       <input
                         type="text"
                         className="form-control"
-                        name="nombre"
-                        value={selectedResource.nombre}
+                        name="name"
+                        value={selectedResource.name}
                         onChange={handleChange}
                       />
                     </div>
@@ -261,8 +272,8 @@ function RecursosScreenAdmin() {
                       <input
                         type="text"
                         className="form-control"
-                        name="descripcion"
-                        value={selectedResource.descripcion}
+                        name="description"
+                        value={selectedResource.description}
                         onChange={handleChange}
                       />
                     </div>
@@ -271,8 +282,8 @@ function RecursosScreenAdmin() {
                       <input
                         type="text"
                         className="form-control"
-                        name="marca"
-                        value={selectedResource.marca}
+                        name="brand"
+                        value={selectedResource.brand}
                         onChange={handleChange}
                       />
                     </div>
@@ -281,8 +292,8 @@ function RecursosScreenAdmin() {
                       <input
                         type="text"
                         className="form-control"
-                        name="modelo"
-                        value={selectedResource.modelo}
+                        name="model"
+                        value={selectedResource.model}
                         onChange={handleChange}
                       />
                     </div>
@@ -291,38 +302,8 @@ function RecursosScreenAdmin() {
                       <input
                         type="text"
                         className="form-control"
-                        name="numeroSerie"
-                        value={selectedResource.numeroSerie}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Tipo de Recurso</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="tipoRecurso"
-                        value={selectedResource.tipoRecurso}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Edificio</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="edificio"
-                        value={selectedResource.edificio}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Espacio</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="espacio"
-                        value={selectedResource.espacio}
+                        name="serialNumber"
+                        value={selectedResource.serialNumber}
                         onChange={handleChange}
                       />
                     </div>
@@ -355,8 +336,8 @@ function RecursosScreenAdmin() {
                     <input
                       type="text"
                       className="form-control"
-                      name="codigo"
-                      value={newResource.codigo}
+                      name="code"
+                      value={newResource.code}
                       onChange={handleChange}
                     />
                   </div>
@@ -365,8 +346,8 @@ function RecursosScreenAdmin() {
                     <input
                       type="text"
                       className="form-control"
-                      name="nombre"
-                      value={newResource.nombre}
+                      name="name"
+                      value={newResource.name}
                       onChange={handleChange}
                     />
                   </div>
@@ -375,8 +356,8 @@ function RecursosScreenAdmin() {
                     <input
                       type="text"
                       className="form-control"
-                      name="descripcion"
-                      value={newResource.descripcion}
+                      name="description"
+                      value={newResource.description}
                       onChange={handleChange}
                     />
                   </div>
@@ -385,8 +366,8 @@ function RecursosScreenAdmin() {
                     <input
                       type="text"
                       className="form-control"
-                      name="marca"
-                      value={newResource.marca}
+                      name="brand"
+                      value={newResource.brand}
                       onChange={handleChange}
                     />
                   </div>
@@ -395,8 +376,8 @@ function RecursosScreenAdmin() {
                     <input
                       type="text"
                       className="form-control"
-                      name="modelo"
-                      value={newResource.modelo}
+                      name="model"
+                      value={newResource.model}
                       onChange={handleChange}
                     />
                   </div>
@@ -405,38 +386,8 @@ function RecursosScreenAdmin() {
                     <input
                       type="text"
                       className="form-control"
-                      name="numeroSerie"
-                      value={newResource.numeroSerie}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Tipo de Recurso</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="tipoRecurso"
-                      value={newResource.tipoRecurso}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Edificio</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="edificio"
-                      value={newResource.edificio}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Espacio</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="espacio"
-                      value={newResource.espacio}
+                      name="serialNumber"
+                      value={newResource.serialNumber}
                       onChange={handleChange}
                     />
                   </div>

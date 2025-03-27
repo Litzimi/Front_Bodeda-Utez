@@ -1,84 +1,162 @@
-import React, { useState, useNavigate } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./RecursosScreenAdmin.css";
 import "./AdminPrincipal";
 import "./UsuariosScreenCss.css";
 
+const API_URL = "http://localhost:8080/api-BobedaUTEZ/user";
+const TYPES_URL = "http://localhost:8080/api-BobedaUTEZ/type-of-user";
+
 export default function UsuariosScreen() {
-
-  const [data, setData] = useState([
-    {
-      nombre: "Nathan",
-      correo: "20233TN203@UTEZ.EDU.MX",
-      tipoUser: "Admin",
-    },
-    {
-      nombre: "Michelle",
-      correo: "20233TN214@UTEZ.EDU.MX",
-      tipoUser: "Admin",
-    },
-  ]);
-
-  const [selectedResource, setSelectedResource] = useState(null);
-  const [newResource, setNewResource] = useState({
-    nombre: "",
-    correo: "",
-    tipoUser: "",
+  const [users, setUsers] = useState([]);
+  const [userTypes, setUserTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newUser, setNewUser] = useState({
+    firstName: "",
+    secondName: "",
+    surname: "",
+    lastName: "",
+    email: "",
+    password: "defaultPassword",
+    phoneNumber: "",
+    typeOfUser: null
   });
+  const navigate = useNavigate();
 
-  const handleEditClick = (resource) => {
-    setSelectedResource({ ...resource });
+  useEffect(() => {
+    fetchUsers();
+    fetchUserTypes();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(API_URL);
+      if (response.data && Array.isArray(response.data.data)) {
+        setUsers(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error al cargar usuarios:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserTypes = async () => {
+    try {
+      const response = await axios.get(TYPES_URL);
+      if (response.data && Array.isArray(response.data)) {
+        setUserTypes(response.data);
+        // Establecer el primer tipo como valor por defecto
+        if (response.data.length > 0) {
+          setNewUser(prev => ({ ...prev, typeOfUser: response.data[0] }));
+        }
+      }
+    } catch (err) {
+      console.error("Error al cargar tipos de usuario:", err);
+    }
+  };
+
+  const handleEditClick = (user) => {
+    setSelectedUser({ ...user });
   };
 
   const handleAddClick = () => {
-    setNewResource({
-      nombre: "",
-      correo: "",
-      tipoUser: "",
+    setNewUser({
+      firstName: "",
+      secondName: "",
+      surname: "",
+      lastName: "",
+      email: "",
+      password: "defaultPassword",
+      phoneNumber: "",
+      typeOfUser: userTypes.length > 0 ? userTypes[0] : null
     });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (selectedResource) {
-      setSelectedResource((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+    if (selectedUser) {
+      setSelectedUser(prev => ({ ...prev, [name]: value }));
     } else {
-      setNewResource((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setNewUser(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSaveChanges = () => {
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.nombre === selectedResource.nombre ? selectedResource : item
-      )
-    );
-    setSelectedResource(null);
+  const handleTypeChange = (e) => {
+    const selectedTypeId = e.target.value;
+    const selectedType = userTypes.find(type => type._id === selectedTypeId);
+    
+    if (selectedUser) {
+      setSelectedUser(prev => ({ ...prev, typeOfUser: selectedType }));
+    } else {
+      setNewUser(prev => ({ ...prev, typeOfUser: selectedType }));
+    }
   };
 
-  const handleAddResource = () => {
-    setData((prevData) => [...prevData, newResource]);
-    setNewResource({
-      nombre: "",
-      correo: "",
-      tipoUser: "",
-    });
+  const handleSaveChanges = async () => {
+    try {
+      await axios.put(API_URL, selectedUser);
+      fetchUsers();
+      setSelectedUser(null);
+    } catch (err) {
+      console.error("Error al actualizar usuario:", err);
+      alert("Error al actualizar usuario: " + (err.response?.data?.message || err.message));
+    }
   };
 
-  const handleDelete = (nombre) => {
+  const handleAddUser = async () => {
+    try {
+      // Validación básica
+      if (!newUser.firstName || !newUser.surname || !newUser.email || !newUser.typeOfUser) {
+        alert("Por favor complete todos los campos obligatorios");
+        return;
+      }
+
+      await axios.post(API_URL, newUser);
+      fetchUsers();
+      setNewUser({
+        firstName: "",
+        secondName: "",
+        surname: "",
+        lastName: "",
+        email: "",
+        password: "defaultPassword",
+        phoneNumber: "",
+        typeOfUser: userTypes.length > 0 ? userTypes[0] : null
+      });
+      // Cierra el modal después de agregar
+      document.getElementById('closeAddModal').click();
+    } catch (err) {
+      console.error("Error al agregar usuario:", err);
+      alert("Error al agregar usuario: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDelete = async (id) => {
     const confirmDelete = window.confirm("¿Está seguro de que desea eliminar este usuario?");
     if (confirmDelete) {
-      setData((prevData) => prevData.filter((item) => item.nombre !== nombre));
+      try {
+        await axios.delete(`${API_URL}/${id}`);
+        fetchUsers();
+      } catch (err) {
+        console.error("Error al eliminar usuario:", err);
+        alert("Error al eliminar usuario: " + (err.response?.data?.message || err.message));
+      }
     }
   };
+
+  const getFullName = (user) => {
+    return `${user.firstName || ''} ${user.surname || ''}`.trim();
+  };
+
+  if (loading) {
+    return <div className="text-center mt-5">Cargando usuarios...</div>;
+  }
 
   return (
     <div>
@@ -175,23 +253,23 @@ export default function UsuariosScreen() {
             </tr>
           </thead>
           <tbody>
-            {data.map((item, index) => (
-              <tr key={index}>
-                <td>{item.nombre}</td>
-                <td>{item.correo}</td>
-                <td>{item.tipoUser}</td>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{getFullName(user)}</td>
+                <td>{user.email}</td>
+                <td>{user.typeOfUser?.name || 'No asignado'}</td>
                 <td>
                   <button
                     className="btn btn-warning btn-sm me-2"
                     data-bs-toggle="modal"
                     data-bs-target="#editModal"
-                    onClick={() => handleEditClick(item)}
+                    onClick={() => handleEditClick(user)}
                   >
                     Editar
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(item.nombre)}
+                    onClick={() => handleDelete(user.id)}
                   >
                     Eliminar
                   </button>
@@ -201,7 +279,7 @@ export default function UsuariosScreen() {
           </tbody>
         </table>
 
-        {selectedResource && (
+        {selectedUser && (
           <div className="modal fade" id="editModal" tabIndex="-1">
             <div className="modal-dialog">
               <div className="modal-content">
@@ -220,30 +298,48 @@ export default function UsuariosScreen() {
                       <input
                         type="text"
                         className="form-control"
-                        name="nombre"
-                        value={selectedResource.nombre}
+                        name="firstName"
+                        value={selectedUser.firstName || ''}
                         onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Apellido</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="surname"
+                        value={selectedUser.surname || ''}
+                        onChange={handleChange}
+                        required
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Correo Electrónico</label>
                       <input
-                        type="text"
+                        type="email"
                         className="form-control"
-                        name="correo"
-                        value={selectedResource.correo}
+                        name="email"
+                        value={selectedUser.email || ''}
                         onChange={handleChange}
+                        required
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Tipo de Usuario</label>
-                      <input
-                        type="text"
+                      <select
                         className="form-control"
-                        name="tipoUser"
-                        value={selectedResource.tipoUser}
-                        onChange={handleChange}
-                      />
+                        value={selectedUser.typeOfUser?._id || ''}
+                        onChange={handleTypeChange}
+                        required
+                      >
+                        {userTypes.map((type) => (
+                          <option key={type._id} value={type._id}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </form>
                 </div>
@@ -278,39 +374,58 @@ export default function UsuariosScreen() {
                   type="button"
                   className="btn-close"
                   data-bs-dismiss="modal"
+                  id="closeAddModal"
                 ></button>
               </div>
               <div className="modal-body">
                 <form>
                   <div className="mb-3">
-                    <label className="form-label">Nombre</label>
+                    <label className="form-label">Nombre <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
-                      name="nombre"
-                      value={newResource.nombre}
+                      name="firstName"
+                      value={newUser.firstName}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Correo Electrónico</label>
+                    <label className="form-label">Apellido <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
-                      name="correo"
-                      value={newResource.correo}
+                      name="surname"
+                      value={newUser.surname}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Tipo de Usuario</label>
+                    <label className="form-label">Correo Electrónico <span className="text-danger">*</span></label>
                     <input
-                      type="text"
+                      type="email"
                       className="form-control"
-                      name="tipoUser"
-                      value={newResource.tipoUser}
+                      name="email"
+                      value={newUser.email}
                       onChange={handleChange}
+                      required
                     />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Tipo de Usuario <span className="text-danger">*</span></label>
+                    <select
+                      className="form-control"
+                      value={newUser.typeOfUser?._id || ''}
+                      onChange={handleTypeChange}
+                      required
+                    >
+                      {userTypes.map((type) => (
+                        <option key={type._id} value={type._id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </form>
               </div>
@@ -325,8 +440,7 @@ export default function UsuariosScreen() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  data-bs-dismiss="modal"
-                  onClick={handleAddResource}
+                  onClick={handleAddUser}
                 >
                   Agregar Usuario
                 </button>
