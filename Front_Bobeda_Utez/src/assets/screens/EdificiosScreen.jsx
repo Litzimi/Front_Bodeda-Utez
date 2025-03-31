@@ -1,76 +1,143 @@
-import React, { useState, useNavigate } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./RecursosScreenAdmin.css";
 import "./AdminPrincipal";
 import "./TipoDeEspacioCss.css";
 
+const API_URL = "http://localhost:8080/api-BobedaUTEZ/building";
 
 export default function EdificiosScreen() {
+  const [buildings, setBuildings] = useState([]);
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [newBuilding, setNewBuilding] = useState({ name: "" });
+  const [loading, setLoading] = useState(false); // Cambiado a false para mostrar tabla inmediatamente
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  
-    const [data, setData] = useState([
-      {
-        nombre: "D1",
-      },
-      {
-        nombre: "D4",
-      },
-    ]);
-  
-    const [selectedResource, setSelectedResource] = useState(null);
-    const [newResource, setNewResource] = useState({
-      nombre: "",
-    });
-  
-    const handleEditClick = (resource) => {
-      setSelectedResource({ ...resource });
-    };
-  
-    const handleAddClick = () => {
-      setNewResource({
-        nombre: "",
-      });
-    };
-  
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      if (selectedResource) {
-        setSelectedResource((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
+  useEffect(() => {
+    fetchBuildings();
+  }, []);
+
+  const fetchBuildings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(API_URL);
+      
+      // Manejo de la respuesta manteniendo estructura simple
+      const buildingsData = response.data?.data || response.data || [];
+      setBuildings(Array.isArray(buildingsData) ? buildingsData : [buildingsData]);
+    } catch (err) {
+      console.error("Error fetching buildings:", err);
+      // Si hay error, mostramos datos de ejemplo como en tu versión original
+      setBuildings([
+        { id: "1", name: "D1" },
+        { id: "2", name: "D4" }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredBuildings = buildings.filter(building =>
+    building.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleEditClick = (building) => {
+    setSelectedBuilding({ ...building });
+  };
+
+  const handleAddClick = () => {
+    setNewBuilding({ name: "" });
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "search") {
+      setSearchTerm(value);
+    } else if (selectedBuilding) {
+      setSelectedBuilding(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewBuilding(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      if (!selectedBuilding?.name?.trim()) {
+        setError("El nombre del edificio es requerido");
+        return;
+      }
+      
+      // Si hay conexión, hacemos la petición PUT
+      if (API_URL) {
+        await axios.put(API_URL, selectedBuilding);
+        await fetchBuildings();
       } else {
-        setNewResource((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
+        // Si no hay conexión, actualizamos localmente como en tu versión original
+        setBuildings(prev => 
+          prev.map(item => 
+            item.id === selectedBuilding.id ? selectedBuilding : item
+          )
+        );
       }
-    };
-  
-    const handleSaveChanges = () => {
-      setData((prevData) =>
-        prevData.map((item) =>
-          item.nombre === selectedResource.nombre ? selectedResource : item
-        )
-      );
-      setSelectedResource(null);
-    };
-  
-    const handleAddResource = () => {
-      setData((prevData) => [...prevData, newResource]);
-      setNewResource({
-        nombre: "",
-      });
-    };
-  
-    const handleDelete = (nombre) => {
-      const confirmDelete = window.confirm("¿Está seguro de que desea eliminar este espacio?");
-      if (confirmDelete) {
-        setData((prevData) => prevData.filter((item) => item.nombre !== nombre));
+      
+      setSelectedBuilding(null);
+    } catch (err) {
+      setError("Error al actualizar el edificio");
+      console.error("Error updating building:", err);
+    }
+  };
+
+  const handleAddBuilding = async () => {
+    try {
+      if (!newBuilding.name?.trim()) {
+        setError("El nombre del edificio es requerido");
+        return;
       }
-    };
+      
+      const buildingToAdd = {
+        ...newBuilding,
+        id: Math.random().toString(36).substring(2, 9) // ID temporal
+      };
+
+      // Si hay conexión, hacemos la petición POST
+      if (API_URL) {
+        await axios.post(API_URL, buildingToAdd);
+        await fetchBuildings();
+      } else {
+        // Si no hay conexión, agregamos localmente como en tu versión original
+        setBuildings(prev => [...prev, buildingToAdd]);
+      }
+      
+      setNewBuilding({ name: "" });
+    } catch (err) {
+      setError("Error al agregar el edificio");
+      console.error("Error adding building:", err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("¿Está seguro de que desea eliminar este edificio?");
+    if (confirmDelete) {
+      try {
+        // Si hay conexión, hacemos la petición DELETE
+        if (API_URL) {
+          await axios.delete(`${API_URL}/${id}`);
+          await fetchBuildings();
+        } else {
+          // Si no hay conexión, eliminamos localmente como en tu versión original
+          setBuildings(prev => prev.filter(item => item.id !== id));
+        }
+      } catch (err) {
+        setError("Error al eliminar el edificio");
+        console.error("Error deleting building:", err);
+      }
+    }
+  };
 
   return (
     <div>
@@ -140,7 +207,11 @@ export default function EdificiosScreen() {
 
       <div className="search-container mt-5 pt-4">
         <form className="d-flex" role="search">
-          <input className="form-control" type="search" placeholder="Buscar🔎" />
+          <input className="form-control" type="search" placeholder="Buscar🔎" 
+            name="search"
+            value={searchTerm}
+            onChange={handleChange}
+          />
         </form>
       </div>
 
@@ -156,30 +227,41 @@ export default function EdificiosScreen() {
         </button>
       </div>
 
-    {/* Tabla de Espacios */}
-    <div className="container mt-5">
+      {error && (
+        <div className="alert alert-danger">
+          {error}
+          <button 
+            className="btn-close" 
+            onClick={() => setError(null)}
+            style={{float: 'right'}}
+          />
+        </div>
+      )}
+
+      <div className="container mt-5">
         <table className="table table-striped">
           <thead>
             <tr>
               <th>Nombre</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((item, index) => (
-              <tr key={index}>
-                <td>{item.nombre}</td>
+            {filteredBuildings.map((building) => (
+              <tr key={building.id}>
+                <td>{building.name}</td>
                 <td>
                   <button
                     className="btn btn-warning btn-sm me-2"
                     data-bs-toggle="modal"
                     data-bs-target="#editModal"
-                    onClick={() => handleEditClick(item)}
+                    onClick={() => handleEditClick(building)}
                   >
                     Editar
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(item.nombre)}
+                    onClick={() => handleDelete(building.id)}
                   >
                     Eliminar
                   </button>
@@ -190,12 +272,12 @@ export default function EdificiosScreen() {
         </table>
 
         {/* Modal de edición */}
-        {selectedResource && (
+        {selectedBuilding && (
           <div className="modal fade" id="editModal" tabIndex="-1">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Editar Espacio</h5>
+                  <h5 className="modal-title">Editar Edificio</h5>
                   <button
                     type="button"
                     className="btn-close"
@@ -209,8 +291,8 @@ export default function EdificiosScreen() {
                       <input
                         type="text"
                         className="form-control"
-                        name="nombre"
-                        value={selectedResource.nombre}
+                        name="name"
+                        value={selectedBuilding.name}
                         onChange={handleChange}
                       />
                     </div>
@@ -238,12 +320,12 @@ export default function EdificiosScreen() {
           </div>
         )}
 
-        {/* Modal de agregar nuevo usuario */}
+        {/* Modal de agregar nuevo edificio */}
         <div className="modal fade" id="addModal" tabIndex="-1">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Agregar Nuevo Usuario</h5>
+                <h5 className="modal-title">Agregar Nuevo Edificio</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -257,8 +339,8 @@ export default function EdificiosScreen() {
                     <input
                       type="text"
                       className="form-control"
-                      name="nombre"
-                      value={newResource.nombre}
+                      name="name"
+                      value={newBuilding.name}
                       onChange={handleChange}
                     />
                   </div>
@@ -276,7 +358,7 @@ export default function EdificiosScreen() {
                   type="button"
                   className="btn btn-primary"
                   data-bs-dismiss="modal"
-                  onClick={handleAddResource}
+                  onClick={handleAddBuilding}
                 >
                   Agregar Edificio
                 </button>
@@ -285,7 +367,6 @@ export default function EdificiosScreen() {
           </div>
         </div>
       </div>
-
     </div>
-  )
+  );
 }

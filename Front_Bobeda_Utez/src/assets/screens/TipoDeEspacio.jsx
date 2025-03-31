@@ -1,4 +1,4 @@
-import React, { useState, useNavigate } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -6,76 +6,161 @@ import "./RecursosScreenAdmin.css";
 import "./AdminPrincipal";
 import "./TipoDeEspacioCss.css";
 
-
 export default function TipoDeEspacio() {
+  const [data, setData] = useState([]);
+  const [selectedResource, setSelectedResource] = useState(null);
+  const [newResource, setNewResource] = useState({ nombre: "" });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  
-    const [data, setData] = useState([
-      {
-        nombre: "CC10",
-        docencia: "CECADEC",
-      },
-      {
-        nombre: "CC11",
-        docencia: "D4",
-      },
-    ]);
-  
-    const [selectedResource, setSelectedResource] = useState(null);
-    const [newResource, setNewResource] = useState({
-      nombre: "",
-      docencia: "",
-    });
-  
-    const handleEditClick = (resource) => {
-      setSelectedResource({ ...resource });
-    };
-  
-    const handleAddClick = () => {
-      setNewResource({
-        nombre: "",
-        docencia: "",
-      });
-    };
-  
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      if (selectedResource) {
-        setSelectedResource((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-      } else {
-        setNewResource((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
+  const API_URL = "http://localhost:8080/api-BobedaUTEZ/type-of-space";
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(API_URL);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-    };
-  
-    const handleSaveChanges = () => {
-      setData((prevData) =>
-        prevData.map((item) =>
-          item.nombre === selectedResource.nombre ? selectedResource : item
-        )
-      );
+      
+      const result = await response.json();
+      console.log("Respuesta del servidor:", result);
+      
+      // Extraer el array de datos de la respuesta
+      const dataArray = result.data || [];
+      console.log("Datos a mostrar:", dataArray);
+      
+      setData(dataArray);
+    } catch (err) {
+      console.error("Error al obtener datos:", err);
+      setError(`Error al cargar los datos: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleEditClick = (resource) => {
+    setSelectedResource(resource);
+    setSuccessMessage("");
+  };
+
+  const handleAddClick = () => {
+    setNewResource({ nombre: "" });
+    setSuccessMessage("");
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (selectedResource) {
+      setSelectedResource(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewResource(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const response = await fetch(`${API_URL}/${selectedResource.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: selectedResource.nombre
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      await fetchData();
       setSelectedResource(null);
-    };
-  
-    const handleAddResource = () => {
-      setData((prevData) => [...prevData, newResource]);
-      setNewResource({
-        nombre: "",
-        docencia: "",
+      setSuccessMessage("Tipo de espacio actualizado correctamente");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleAddResource = async () => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newResource.nombre
+        }),
       });
-    };
-  
-    const handleDelete = (nombre) => {
-      const confirmDelete = window.confirm("¿Está seguro de que desea eliminar este espacio?");
-      if (confirmDelete) {
-        setData((prevData) => prevData.filter((item) => item.nombre !== nombre));
+
+      if (!response.ok) {
+        throw new Error(await response.text());
       }
-    };
+
+      await fetchData();
+      setNewResource({ nombre: "" });
+      setSuccessMessage("Tipo de espacio creado correctamente");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("¿Estás seguro de eliminar este tipo de espacio?")) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        await fetchData();
+        setSuccessMessage("Tipo de espacio eliminado correctamente");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+  };
+
+  const filteredData = data.filter(item => {
+    const nombre = item.name?.toString().toLowerCase() || item.nombre?.toString().toLowerCase() || '';
+    const search = searchTerm.toLowerCase();
+    return nombre.includes(search);
+  });
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mt-5 pt-5">
+        <div className="alert alert-danger">
+          <h4 className="alert-heading">Error</h4>
+          <p>{error}</p>
+          <button className="btn btn-primary mt-2" onClick={fetchData}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -145,12 +230,18 @@ export default function TipoDeEspacio() {
 
       <div className="search-container mt-5 pt-4">
         <form className="d-flex" role="search">
-          <input className="form-control" type="search" placeholder="Buscar🔎" />
+          <input
+            className="form-control" 
+            type="search" 
+            placeholder="Buscar🔎" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </form>
       </div>
 
       <div className="header-container2">
-        <h2 className="mb-3" style={{}}>Tipos de espacios</h2>
+        <h2 className="mb-3">Tipos de espacios</h2>
         <button
           className="btn1 btn-success"
           data-bs-toggle="modal"
@@ -161,40 +252,57 @@ export default function TipoDeEspacio() {
         </button>
       </div>
 
-    <div className="container mt-5">
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Docencia</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item, index) => (
-              <tr key={index}>
-                <td>{item.nombre}</td>
-                <td>{item.docencia}</td>
-                <td>
-                  <button
-                    className="btn btn-warning btn-sm me-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editModal"
-                    onClick={() => handleEditClick(item)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(item.nombre)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
+      {successMessage && (
+        <div className="alert alert-success alert-dismissible fade show mx-3">
+          {successMessage}
+          <button 
+            type="button" 
+            className="btn-close" 
+            onClick={() => setSuccessMessage("")}
+          ></button>
+        </div>
+      )}
+
+      <div className="container mt-3">
+        {filteredData.length === 0 ? (
+          <div className="alert alert-info">
+            {searchTerm 
+              ? `No se encontraron resultados para "${searchTerm}"`
+              : "No hay tipos de espacios registrados"}
+          </div>
+        ) : (
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredData.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.name || item.nombre}</td>
+                  <td>
+                    <button
+                      className="btn btn-warning btn-sm me-2"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editModal"
+                      onClick={() => handleEditClick(item)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         {selectedResource && (
           <div className="modal fade" id="editModal" tabIndex="-1">
@@ -216,17 +324,7 @@ export default function TipoDeEspacio() {
                         type="text"
                         className="form-control"
                         name="nombre"
-                        value={selectedResource.nombre}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Docencia</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="docencia"
-                        value={selectedResource.docencia}
+                        value={selectedResource.name || selectedResource.nombre || ""}
                         onChange={handleChange}
                       />
                     </div>
@@ -258,7 +356,7 @@ export default function TipoDeEspacio() {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Agregar Nuevo Usuario</h5>
+                <h5 className="modal-title">Agregar Nuevo Tipo de Espacio</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -274,16 +372,6 @@ export default function TipoDeEspacio() {
                       className="form-control"
                       name="nombre"
                       value={newResource.nombre}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Docencia</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="docencia"
-                      value={newResource.docencia}
                       onChange={handleChange}
                     />
                   </div>
@@ -303,14 +391,13 @@ export default function TipoDeEspacio() {
                   data-bs-dismiss="modal"
                   onClick={handleAddResource}
                 >
-                  Agregar Usuario
+                  Agregar
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
-  )
+  );
 }

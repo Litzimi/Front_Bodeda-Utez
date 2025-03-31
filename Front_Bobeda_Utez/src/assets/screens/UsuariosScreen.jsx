@@ -16,13 +16,13 @@ export default function UsuariosScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newUser, setNewUser] = useState({
-    firstName: "",
+    firstName: "Usuario",
     secondName: "",
-    surname: "",
+    surname: "Demo",
     lastName: "",
-    email: "",
-    password: "defaultPassword",
-    phoneNumber: "",
+    email: "usuario@demo.com",
+    password: "DefaultPassword123!",
+    phoneNumber: "5551234567",
     typeOfUser: null
   });
   const navigate = useNavigate();
@@ -49,91 +49,144 @@ export default function UsuariosScreen() {
   const fetchUserTypes = async () => {
     try {
       const response = await axios.get(TYPES_URL);
-      if (response.data && Array.isArray(response.data)) {
-        setUserTypes(response.data);
-        // Establecer el primer tipo como valor por defecto
-        if (response.data.length > 0) {
-          setNewUser(prev => ({ ...prev, typeOfUser: response.data[0] }));
+      console.log("Tipos de usuario recibidos:", response.data);
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        const types = response.data.data;
+        setUserTypes(types);
+        if (types.length > 0) {
+          setNewUser(prev => ({
+            ...prev,
+            typeOfUser: { id: types[0].id, name: types[0].name }
+          }));
         }
       }
     } catch (err) {
-      console.error("Error al cargar tipos de usuario:", err);
+      console.error("Error cargando tipos:", err);
+      alert("Error al cargar tipos de usuario");
     }
   };
 
   const handleEditClick = (user) => {
-    setSelectedUser({ ...user });
+    setSelectedUser({ 
+      ...user,
+      typeOfUser: user.typeOfUser ? {
+        id: user.typeOfUser.id,
+        name: user.typeOfUser.name
+      } : null
+    });
   };
 
   const handleAddClick = () => {
     setNewUser({
-      firstName: "",
+      firstName: "Usuario",
       secondName: "",
-      surname: "",
+      surname: "Demo",
       lastName: "",
-      email: "",
-      password: "defaultPassword",
-      phoneNumber: "",
-      typeOfUser: userTypes.length > 0 ? userTypes[0] : null
+      email: `usuario${Math.floor(Math.random() * 1000)}@demo.com`,
+      password: "DefaultPassword123!",
+      phoneNumber: `555${Math.floor(1000000 + Math.random() * 9000000)}`,
+      typeOfUser: userTypes.length > 0 ? {
+        id: userTypes[0].id,
+        name: userTypes[0].name
+      } : null
     });
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (selectedUser) {
-      setSelectedUser(prev => ({ ...prev, [name]: value }));
-    } else {
-      setNewUser(prev => ({ ...prev, [name]: value }));
-    }
   };
 
   const handleTypeChange = (e) => {
     const selectedTypeId = e.target.value;
-    const selectedType = userTypes.find(type => type._id === selectedTypeId);
+    const selectedType = userTypes.find(type => type.id === selectedTypeId);
     
     if (selectedUser) {
-      setSelectedUser(prev => ({ ...prev, typeOfUser: selectedType }));
+      setSelectedUser(prev => ({ 
+        ...prev, 
+        typeOfUser: selectedType ? {
+          id: selectedType.id,
+          name: selectedType.name
+        } : null
+      }));
     } else {
-      setNewUser(prev => ({ ...prev, typeOfUser: selectedType }));
+      setNewUser(prev => ({ 
+        ...prev, 
+        typeOfUser: selectedType ? {
+          id: selectedType.id,
+          name: selectedType.name
+        } : null
+      }));
     }
   };
 
   const handleSaveChanges = async () => {
     try {
-      await axios.put(API_URL, selectedUser);
+      await axios.put(API_URL, {
+        ...selectedUser,
+        typeOfUser: selectedUser.typeOfUser ? {
+          id: selectedUser.typeOfUser.id,
+          name: selectedUser.typeOfUser.name
+        } : null
+      });
       fetchUsers();
       setSelectedUser(null);
     } catch (err) {
       console.error("Error al actualizar usuario:", err);
-      alert("Error al actualizar usuario: " + (err.response?.data?.message || err.message));
+      alert(`Error al actualizar: ${err.response?.data?.message || err.message}`);
     }
   };
 
   const handleAddUser = async () => {
     try {
-      // Validación básica
-      if (!newUser.firstName || !newUser.surname || !newUser.email || !newUser.typeOfUser) {
-        alert("Por favor complete todos los campos obligatorios");
+      if (!newUser.typeOfUser) {
+        alert("Por favor seleccione un tipo de usuario");
         return;
       }
-
-      await axios.post(API_URL, newUser);
-      fetchUsers();
-      setNewUser({
-        firstName: "",
-        secondName: "",
-        surname: "",
-        lastName: "",
-        email: "",
-        password: "defaultPassword",
-        phoneNumber: "",
-        typeOfUser: userTypes.length > 0 ? userTypes[0] : null
+  
+      const userToCreate = {
+        firstName: newUser.firstName || "Usuario",
+        secondName: newUser.secondName || "",
+        surname: newUser.surname || "Demo",
+        lastName: newUser.lastName || "",
+        email: newUser.email,
+        password: newUser.password,
+        phoneNumber: newUser.phoneNumber,
+        typeOfUser: {
+          id: newUser.typeOfUser.id,
+          name: newUser.typeOfUser.name
+        }
+      };
+  
+      console.log("Datos a enviar:", JSON.stringify(userToCreate, null, 2));
+  
+      const response = await axios.post(API_URL, userToCreate, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      // Cierra el modal después de agregar
-      document.getElementById('closeAddModal').click();
+      
+      if (response.data && response.data.success) {
+        fetchUsers();
+        setNewUser({
+          firstName: "Usuario",
+          secondName: "",
+          surname: "Demo",
+          lastName: "",
+          email: `usuario${Math.floor(Math.random() * 1000)}@demo.com`,
+          password: "DefaultPassword123!",
+          phoneNumber: `555${Math.floor(1000000 + Math.random() * 9000000)}`,
+          typeOfUser: userTypes.length > 0 ? {
+            id: userTypes[0].id,
+            name: userTypes[0].name
+          } : null
+        });
+        document.getElementById('closeAddModal').click();
+      } else {
+        throw new Error(response.data?.message || "Error en el servidor");
+      }
     } catch (err) {
-      console.error("Error al agregar usuario:", err);
-      alert("Error al agregar usuario: " + (err.response?.data?.message || err.message));
+      console.error("Error completo:", {
+        message: err.message,
+        response: err.response?.data,
+        request: err.config?.data
+      });
+      alert(`Error al registrar: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -145,7 +198,7 @@ export default function UsuariosScreen() {
         fetchUsers();
       } catch (err) {
         console.error("Error al eliminar usuario:", err);
-        alert("Error al eliminar usuario: " + (err.response?.data?.message || err.message));
+        alert(`Error al eliminar: ${err.response?.data?.message || err.message}`);
       }
     }
   };
@@ -196,7 +249,7 @@ export default function UsuariosScreen() {
                     </Link>
                   </li>
                   <li><Link className="dropdown-item" to="/EdificiosScreen">Edificios</Link></li>
-                  <li><Link className="dropdown-item" to="TiposDeRecursos">Tipos de recursos</Link></li>
+                  <li><Link className="dropdown-item" to="/TiposDeRecursos">Tipos de recursos</Link></li>
                   <li><Link className="dropdown-item" to="/ResponsablesScreen">Responsables</Link></li>
                   <li><Link className="dropdown-item" to="/TipoDeEspacio">Tipo de espacio</Link></li>
                   <li><Link className="dropdown-item" to="/InventariosAdmin">
@@ -249,6 +302,7 @@ export default function UsuariosScreen() {
               <th>Nombre</th>
               <th>Correo Electrónico</th>
               <th>Tipo de Usuario</th>
+              <th>Teléfono</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -257,7 +311,8 @@ export default function UsuariosScreen() {
               <tr key={user.id}>
                 <td>{getFullName(user)}</td>
                 <td>{user.email}</td>
-                <td>{user.typeOfUser?.name || 'No asignado'}</td>
+                <td>{user.typeOfUser?.name || 'Sin tipo'}</td>
+                <td>{user.phoneNumber}</td>
                 <td>
                   <button
                     className="btn btn-warning btn-sm me-2"
@@ -279,16 +334,89 @@ export default function UsuariosScreen() {
           </tbody>
         </table>
 
+        <div className="modal fade" id="addModal" tabIndex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="addModalLabel">Nuevo Usuario</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                  id="closeAddModal"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="alert alert-info">
+                  Se registrará un usuario
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Nombre:</label>
+                  <input type="text" className="form-control" value={newUser.firstName} disabled />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Apellido:</label>
+                  <input type="text" className="form-control" value={newUser.surname} disabled />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Correo:</label>
+                  <input type="text" className="form-control" value={newUser.email} disabled />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Teléfono:</label>
+                  <input type="text" className="form-control" value={newUser.phoneNumber} disabled />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Contraseña:</label>
+                  <input type="text" className="form-control" value={newUser.password} disabled />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Tipo de Usuario:</label>
+                  <select
+                    className="form-control"
+                    value={newUser.typeOfUser?.id || ''}
+                    onChange={handleTypeChange}
+                  >
+                    {userTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleAddUser}
+                >
+                  Registrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {selectedUser && (
-          <div className="modal fade" id="editModal" tabIndex="-1">
+          <div className="modal fade" id="editModal" tabIndex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Editar Usuario</h5>
+                  <h5 className="modal-title" id="editModalLabel">Editar Usuario</h5>
                   <button
                     type="button"
                     className="btn-close"
                     data-bs-dismiss="modal"
+                    aria-label="Close"
                   ></button>
                 </div>
                 <div className="modal-body">
@@ -300,8 +428,7 @@ export default function UsuariosScreen() {
                         className="form-control"
                         name="firstName"
                         value={selectedUser.firstName || ''}
-                        onChange={handleChange}
-                        required
+                        onChange={(e) => setSelectedUser({...selectedUser, firstName: e.target.value})}
                       />
                     </div>
                     <div className="mb-3">
@@ -311,8 +438,7 @@ export default function UsuariosScreen() {
                         className="form-control"
                         name="surname"
                         value={selectedUser.surname || ''}
-                        onChange={handleChange}
-                        required
+                        onChange={(e) => setSelectedUser({...selectedUser, surname: e.target.value})}
                       />
                     </div>
                     <div className="mb-3">
@@ -322,20 +448,18 @@ export default function UsuariosScreen() {
                         className="form-control"
                         name="email"
                         value={selectedUser.email || ''}
-                        onChange={handleChange}
-                        required
+                        onChange={(e) => setSelectedUser({...selectedUser, email: e.target.value})}
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Tipo de Usuario</label>
                       <select
                         className="form-control"
-                        value={selectedUser.typeOfUser?._id || ''}
+                        value={selectedUser.typeOfUser?.id || ''}
                         onChange={handleTypeChange}
-                        required
                       >
                         {userTypes.map((type) => (
-                          <option key={type._id} value={type._id}>
+                          <option key={type.id} value={type.id}>
                             {type.name}
                           </option>
                         ))}
@@ -364,90 +488,6 @@ export default function UsuariosScreen() {
             </div>
           </div>
         )}
-
-        <div className="modal fade" id="addModal" tabIndex="-1">
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Agregar Nuevo Usuario</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  id="closeAddModal"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <form>
-                  <div className="mb-3">
-                    <label className="form-label">Nombre <span className="text-danger">*</span></label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="firstName"
-                      value={newUser.firstName}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Apellido <span className="text-danger">*</span></label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="surname"
-                      value={newUser.surname}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Correo Electrónico <span className="text-danger">*</span></label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      name="email"
-                      value={newUser.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Tipo de Usuario <span className="text-danger">*</span></label>
-                    <select
-                      className="form-control"
-                      value={newUser.typeOfUser?._id || ''}
-                      onChange={handleTypeChange}
-                      required
-                    >
-                      {userTypes.map((type) => (
-                        <option key={type._id} value={type._id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  Cerrar
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleAddUser}
-                >
-                  Agregar Usuario
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
