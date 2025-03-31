@@ -9,14 +9,15 @@ function RecursosScreenAdmin() {
   const [data, setData] = useState([]);
   const [selectedResource, setSelectedResource] = useState(null);
   const [newResource, setNewResource] = useState({
+    // file: null,
     code: "",
     name: "",
     description: "",
     brand: "",
     model: "",
     serialNumber: "",
-    typeOfResource: null,
-    building: null,
+    // typeOfResource: null,
+    // building: null,
   });
 
   useEffect(() => {
@@ -54,14 +55,15 @@ function RecursosScreenAdmin() {
   const handleAddClick = () => {
     setSelectedResource(null);
     setNewResource({
+      // file: null,
       code: "",
       name: "",
       description: "",
       brand: "",
       model: "",
       serialNumber: "",
-      typeOfResource: null,
-      building: null,
+      // typeOfResource: null,
+      // building: null,
     });
   };
 
@@ -92,20 +94,41 @@ function RecursosScreenAdmin() {
 
   const handleAddResource = async () => {
     try {
-      await axios.post("http://localhost:8080/api-BobedaUTEZ/resource", newResource);
-      fetchResources();
+      const formData = new FormData();
+      // Si tienes un archivo, adjúntalo también
+      // formData.append("file", null);
+      formData.append("code", newResource.code);
+      formData.append("name", newResource.name);
+      formData.append("description", newResource.description);
+      formData.append("brand", newResource.brand);
+      formData.append("model", newResource.model);
+      formData.append("serialNumber", newResource.serialNumber);
+      // formData.append("typeOfResource", JSON.stringify(newResource.typeOfResource)); // Serializar si es un objeto
+      // formData.append("building", JSON.stringify(newResource.building)); // Serializar si es un objeto
+  
+      await axios.post("http://localhost:8080/api-BobedaUTEZ/resource", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+      fetchResources(); // Actualiza los recursos
       setNewResource({
+        // file: null,
         code: "",
         name: "",
         description: "",
         brand: "",
         model: "",
         serialNumber: "",
-        typeOfResource: null,
-        building: null,
+        // typeOfResource: null,
+        // building: null,
       });
     } catch (error) {
-      console.error("Error adding resource:", error);
+      if (error.response) {
+        console.error("Error del servidor:", error.response.data);
+      } else {
+        console.error("Error al conectar con el servidor:", error.message);
+      }
     }
   };
 
