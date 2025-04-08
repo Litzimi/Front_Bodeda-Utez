@@ -1,25 +1,65 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./InventariosAdmin.css";
-import "./AdminPrincipal";
 
-function InventariosAdmin() {
-    let navigate = useNavigate();
+const API_URL = "http://localhost:8080/api-BobedaUTEZ/inventary-raised";
 
-    const [data, setData] = useState([
-        {
-            codigo: "ffff0_1",
-            fecha: "Silla",
-            edificio: "D1",
-        },
-        {
-            codigo: "ffff0_2",
-            fecha: "Silla",
-            edificio: "D1",
-        },
-    ]);
+export default function InventariosAdmin() {
+    const navigate = useNavigate();
+    const [inventarios, setInventarios] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchInventarios = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(API_URL);
+                setInventarios(response.data.data || []);
+                setError(null);
+            } catch (err) {
+                console.error("Error fetching inventories:", err);
+                setError("No se pudo conectar con el servidor");
+                // Datos de ejemplo como fallback
+                setInventarios([
+                    {
+                        id: "1",
+                        date: "2023-05-15T00:00:00",
+                        building: { name: "D1" },
+                        typeOfSpace: { name: "Aula" }
+                    },
+                    {
+                        id: "2",
+                        date: "2023-05-16T00:00:00",
+                        building: { name: "D4" },
+                        typeOfSpace: { name: "Laboratorio" }
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInventarios();
+    }, []);
+
+    const formatFecha = (fechaStr) => {
+        if (!fechaStr) return 'Sin fecha';
+        const [year, month, day] = fechaStr.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
+    };
+
+    const handleViewDetails = (id) => {
+        navigate(`/inventarios/${id}`);
+    };
+
+    const handleDownloadPDF = (id) => {
+        console.log("Descargando PDF para inventario:", id);
+    };
 
     return (
         <div>
@@ -60,8 +100,8 @@ function InventariosAdmin() {
                                     </li>
                                     <li><Link className="dropdown-item" to="/EdificiosScreen">Edificios</Link></li>
                                     <li><Link className="dropdown-item" to="/UsuariosScreen">Usuarios</Link></li>
-                                    <li><Link className="dropdown-item" to="TiposDeRecursos">Tipos de recursos</Link></li>
-                                    <li><Link className="dropdown-item" to="/ResponsablesScreen">Responsables</Link></li>
+                                    <li><Link className="dropdown-item" to="/TiposDeRecursos">Tipos de recursos</Link></li>
+                                    <li><Link className="dropdown-item" to="/ResponsablesScreen">Espacios</Link></li>
                                     <li><Link className="dropdown-item" to="/TipoDeEspacio">Tipo de espacio</Link></li>
                                     <li><Link className="dropdown-item" to="/InventariosAdmin">
                                         Inventarios levantados
@@ -87,44 +127,56 @@ function InventariosAdmin() {
                     </div>
                 </div>
             </nav>
+
             <div className="search-container mt-5 pt-4">
                 <form className="d-flex" role="search">
                     <input className="form-control" type="search" placeholder="Buscar🔎" />
                 </form>
             </div>
+
             <h2>Inventarios Levantados</h2>
+
+            {error && (
+                <div className="alert alert-danger" role="alert">
+                    {error}
+                </div>
+            )}
 
             <div className="container mt-5">
                 <table className="table table-striped">
                     <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Fecha</th>
-                            <th>Edificio</th>
-                            <th>Acciones</th>
-                        </tr>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Edificio</th>
+                        <th>Espacio</th>
+                        <th>Acciones</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {data.map((item, index) => (
-                            <tr key={index}>
-                                <td>{item.codigo}</td>
-                                <td>{item.fecha}</td>
-                                <td>{item.edificio}</td>
-                                <td>
-                                    <button className="btn-custom btn-warning btn-custom-ver">
-                                        Ver 👁️
-                                    </button>
-                                    <button className="btn-custom btn-danger btn-custom-descargar">
-                                        Descargar PDF 📄
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                    {inventarios.map((item) => (
+                        <tr key={item.id}>
+                            <td>{formatFecha(item.date)}</td>
+                            <td>{item.building?.name || 'Sin edificio'}</td>
+                            <td>{item.typeOfSpace?.name || 'Sin espacio'}</td>
+                            <td>
+                                <button
+                                    className="btn-custom btn-warning btn-custom-ver"
+                                    onClick={() => handleViewDetails(item.id)}  // Usamos la función que ya tienes definida
+                                >
+                                    Ver 👁️
+                                </button>
+                                <button
+                                    className="btn-custom btn-danger btn-custom-descargar"
+                                    onClick={() => handleDownloadPDF(item.id)}
+                                >
+                                    Descargar PDF 📄
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
                     </tbody>
                 </table>
             </div>
         </div>
     );
 }
-
-export default InventariosAdmin;

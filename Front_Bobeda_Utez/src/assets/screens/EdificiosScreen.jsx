@@ -263,7 +263,7 @@ export default function EdificiosScreen() {
                     <li><Link className="dropdown-item" to="/Recursos">Recursos</Link></li>
                     <li><Link className="dropdown-item" to="/UsuariosScreen">Usuarios</Link></li>
                     <li><Link className="dropdown-item" to="/TiposDeRecursos">Tipos de recursos</Link></li>
-                    <li><Link className="dropdown-item" to="/ResponsablesScreen">Responsables</Link></li>
+                    <li><Link className="dropdown-item" to="/ResponsablesScreen">Espacios</Link></li>
                     <li><Link className="dropdown-item" to="/TipoDeEspacio">Tipo de espacio</Link></li>
                     <li><Link className="dropdown-item" to="/InventariosAdmin">
                       Inventarios levantados
